@@ -56,7 +56,13 @@ class DataPreprocessing:
             for video in videos:
                 video_dir = human_dir + video + "/"
                 pictures = os.listdir(video_dir)
-                pictures = random.sample(pictures, self.max_frames)
+
+                try:
+                    pictures = random.sample(pictures, self.max_frames)
+                except ValueError as e:
+                    print(f"No images in {video_dir}: {e}") 
+                    break
+
                 for picture in pictures:
                     picture_dir = video_dir + picture
                     if picture.endswith(".jpg"):

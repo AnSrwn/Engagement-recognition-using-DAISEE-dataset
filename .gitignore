@@ -1,1 +1,10 @@
 __pycache__/
+Miniconda3-latest-Linux-x86_64.sh
+
+dataset/DAiSEE/DataSet
+dataset/DAiSEE/GenderClips
+dataset/DAiSEE/histogram
+dataset/DAiSEE/Labels
+
+tfrecords
+logs
