@@ -2,8 +2,10 @@ from flask import Flask, render_template, Response
 from camera import VideoCameraModel
 import logging
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow.compat.v1 import graph_util
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.models import load_model
 import os
 import cv2
 import numpy as np
@@ -41,9 +43,24 @@ def gen(camera):
                         input_tensor_name = 'mobilenetv2_1.00_224_input:0'
                     else:
                         if data_augmentation:
-                            input_tensor_name = 'conv2d_5_input:0'
+                            input_tensor_name = 'input_2:0'
                         else:
                             input_tensor_name = 'conv2d_input:0'
+
+                    # # read pb into graph_def
+                    # with tf.io.gfile.GFile('checkpoints/scratch_aug/model.pb', "rb") as f:
+                    #     graph_def = tf.compat.v1.GraphDef()
+                    #     graph_def.ParseFromString(f.read())
+
+                    # # import graph_def
+                    # with tf.Graph().as_default() as graph:
+                    #     tf.import_graph_def(graph_def)
+
+                    # # print operations
+                    # for op in graph.get_operations():
+                    #     if op.type == "Placeholder":
+                    #         print(op.name)
+
                     input_tensor = detection_graph.get_tensor_by_name(input_tensor_name)
                     output_tensor = detection_graph.get_tensor_by_name('prediction/Sigmoid:0')
                     output_logits = sess.run(output_tensor, feed_dict={input_tensor: image})
@@ -56,10 +73,13 @@ def gen(camera):
                     # Write label Down
                     cv2.putText(frame, text_down, (x, y + h + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
                     break
-                ret, jpeg = cv2.imencode('.jpg', frame)
-                frame = jpeg.tobytes()
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+                try:
+                    ret, jpeg = cv2.imencode('.jpg', frame)
+                    frame = jpeg.tobytes()
+                    yield (b'--frame\r\n'
+                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+                except cv2.error as e:
+                    print("No frame: {e}")
 
 
 @app.route('/video_feed')
@@ -70,7 +90,7 @@ def video_feed():
 
 if __name__ == '__main__':
     checkpoint_dir = 'checkpoints/'
-    use_pretrained = True
+    use_pretrained = False
     data_augmentation = True
     pretrained_name = 'mobilenet'
     if use_pretrained:
@@ -85,12 +105,12 @@ if __name__ == '__main__':
     tf.compat.v1.disable_eager_execution()
 
     last_model = os.listdir(checkpoint_dir)[-1]
-    chosen_model = 'Epoch_439_model.hp5'
-    # chosen model = last_model
+    # chosen_model = 'Epoch_439_model.hp5'
+    chosen_model = last_model
     save_pb = True
     if save_pb:
         h5_path = checkpoint_dir + chosen_model
-        model = tf.keras.models.load_model(h5_path, compile=False)
+        model = load_model(h5_path, compile=False)
         # save pb
         with K.get_session() as sess:
             output_names = [out.op.name for out in model.outputs]
