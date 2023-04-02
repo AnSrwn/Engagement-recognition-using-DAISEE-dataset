@@ -64,8 +64,8 @@ def gen(camera):
                     input_tensor = detection_graph.get_tensor_by_name(input_tensor_name)
                     output_tensor = detection_graph.get_tensor_by_name('prediction/Sigmoid:0')
                     output_logits = sess.run(output_tensor, feed_dict={input_tensor: image})
-                    text_up = 'Bored:'+str(output_logits[0][0])+' Engaged:'+str(output_logits[0][1])
-                    text_down = 'Confused:'+str(output_logits[0][2])+' Frustrated'+str(output_logits[0][2])
+                    text_up = 'Bored: '+str(round(output_logits[0][0]))+' Engaged: '+str(round(output_logits[0][1]))
+                    text_down = 'Confused: '+str(round(output_logits[0][2]))+' Frustrated: '+str(round(output_logits[0][2]))
                     # Draw rect
                     cv2.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (0, 255, 0), 2)
                     # Write label Up
