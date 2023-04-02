@@ -6,6 +6,6 @@ dataset/DAiSEE/GenderClips
 dataset/DAiSEE/histogram
 dataset/DAiSEE/Labels
 
-checkpoints
+#checkpoints
 tfrecords
 logs
